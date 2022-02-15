@@ -5,19 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="fb9cdf81-e2a8-459d-9b9d-e8c9bea447e5" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/../ServerLogin/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../ServerLogin/app/src/main/java/com/example/serverlogin/Login.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../ServerLogin/app/src/main/java/com/example/serverlogin/LoginRequest.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../ServerLogin/app/src/main/java/com/example/serverlogin/Register.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../ServerLogin/app/src/main/java/com/example/serverlogin/RegisterRequest.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../ServerLogin/app/src/main/res/layout/activity_login.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../ServerLogin/app/src/main/res/layout/activity_register.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../ServerTest/app/src/main/java/com/example/servertest/Login.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../ServerTest/app/src/main/java/com/example/servertest/LoginRequest.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../ServerTest/app/src/main/java/com/example/servertest/MainActivity.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../ServerTest/app/src/main/java/com/example/servertest/MainRequest.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../ServerTest/app/src/main/res/layout/activity_login.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/Tistory6.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,5 +52,6 @@
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
 </project>
