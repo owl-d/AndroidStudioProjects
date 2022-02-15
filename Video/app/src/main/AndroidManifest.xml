@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/> //외부 저장소 권한(동영상 저장)
     <uses-permission android:name="android.permission.RECORD_AUDIO"/> //오디오 저장
+    <uses-permission android:name="android.permission.INTERNET"/>
 
 
     <application
