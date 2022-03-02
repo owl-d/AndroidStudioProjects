@@ -117,7 +117,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         CognitoCachingCredentialsProvider credentialsProvider = new CognitoCachingCredentialsProvider(
                 getApplicationContext(),
                 "ap-northeast-2:b0554968-0272-480a-b3ed-9e4185b58d5c", // 자격 증명 풀 ID
-                Regions.AP_NORTHEAST_2 // 리전
+                Regions.AP_NORTHEAST_2 // 리전 us-east-1
         );
 
         s3 = new AmazonS3Client(credentialsProvider);
