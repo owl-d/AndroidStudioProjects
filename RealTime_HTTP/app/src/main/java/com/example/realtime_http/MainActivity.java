@@ -27,6 +27,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import android.util.Base64;
@@ -58,6 +59,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 
 public class MainActivity extends AppCompatActivity implements SurfaceHolder.Callback { //콜백 관련 임플리먼트
@@ -138,40 +147,62 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
             Bitmap decoded_image = BitmapFactory.decodeStream(byteArrayInputStream);
 
-            new Thread(() -> {
-                /// HTTP POST TX ////////////////////////////////////////////////////////////////////
-                try {
-                    URL url = new URL("http://3.37.237.18:5000/");
-                    String result = "";
+            /// HTTP POST TX ////////////////////////////////////////////////////////////////////
+            String postUrl = "http://3.37.237.18:5000/";
+            String postBodyText="Hello";
+            MediaType mediaType = MediaType.parse("text/plain");
+            //MediaType mediaType = MediaType.parse("text/plain; charset=utf-8");
+            RequestBody postBody = RequestBody.create(mediaType, postBodyText);
 
-                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                    conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-                    conn.setUseCaches(false);
-                    conn.setRequestMethod("POST");
-                    conn.setConnectTimeout(1000);
-                    conn.setDoOutput(true);
-                    conn.setDoInput(true);
-
-                    OutputStream outputStream = conn.getOutputStream();
-                    outputStream.write(byte_img_Stream.getBytes("UTF-8")); //byte_img_Stream : image data
-                    outputStream.flush();
-                    outputStream.close();
-                    Log.d("TAG", "Output Stream Closed");
-
-                    //result = new InputStreamReader(conn.getInputStream());
-
-                    conn.disconnect();
-                    Log.d("TAG", "result : " + result);
-
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }).start();
+            postRequest(postUrl, postBody);
 
             imageView.setImageBitmap(decoded_image);
         }
+    }
+
+    private void postRequest(String postUrl, RequestBody postBody) {
+        OkHttpClient client = new OkHttpClient();
+
+        Request request = new Request.Builder()
+                .url(postUrl)
+                .post(postBody)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                // Cancel the post on failure.
+                call.cancel();
+
+                // In order to access the TextView inside the UI thread, the code is executed inside runOnUiThread()
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        TextView responseText = findViewById(R.id.responseText);
+                        responseText.setText("Failed to Connect to Server");
+                        Log.d("TAG", "PostRequeset : Failure");
+                    }
+                });
+            }
+
+            @Override
+            public void onResponse(Call call, final Response response) throws IOException {
+                // In order to access the TextView inside the UI thread, the code is executed inside runOnUiThread()
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        TextView responseText = findViewById(R.id.responseText);
+                        try {
+                            responseText.setText(response.body().string());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+//                        responseText.setText("Success to Connect to Server");
+                        Log.d("TAG", "PostRequeset : Success");
+                    }
+                });
+            }
+        });
     }
 
     PermissionListener permission = new PermissionListener() {
