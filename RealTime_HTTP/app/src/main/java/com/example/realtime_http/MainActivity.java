@@ -51,10 +51,12 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 
@@ -136,80 +138,40 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
             Bitmap decoded_image = BitmapFactory.decodeStream(byteArrayInputStream);
 
-            /*
-            /// HTTP POST TX ////////////////////////////////////////////////////////////////////
-            try {
-                URL url = new URL("IP 주소");
-                String result = "";
+            new Thread(() -> {
+                /// HTTP POST TX ////////////////////////////////////////////////////////////////////
+                try {
+                    URL url = new URL("http://3.37.237.18:5000/");
+                    String result = "";
 
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-                conn.setUseCaches(false);
-                conn.setRequestMethod("POST");
-                conn.setConnectTimeout(1000);
-                conn.setDoOutput(true);
-                conn.setDoInput(true);
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                    conn.setUseCaches(false);
+                    conn.setRequestMethod("POST");
+                    conn.setConnectTimeout(1000);
+                    conn.setDoOutput(true);
+                    conn.setDoInput(true);
 
-                OutputStream outputStream = conn.getOutputStream();
-                outputStream.write(postData.getBytes("UTF-8"));
-                outputStream.flush();
-                outputStream.close();
-                Log.d("TAG", "Output Stream Closed");
+                    OutputStream outputStream = conn.getOutputStream();
+                    outputStream.write(byte_img_Stream.getBytes("UTF-8")); //byte_img_Stream : image data
+                    outputStream.flush();
+                    outputStream.close();
+                    Log.d("TAG", "Output Stream Closed");
 
-                result = readStream(conn.getInputStream());
+                    //result = new InputStreamReader(conn.getInputStream());
 
-                conn.disconnect();
-                Log.d("TAG", "result : " + result);
+                    conn.disconnect();
+                    Log.d("TAG", "result : " + result);
 
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            */
-            imageView.setImageBitmap(imageBitmap);
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }).start();
+
+            imageView.setImageBitmap(decoded_image);
         }
-    }
-
-    private void uploadWithTransferUtility() {
-
-        File fileToUpload = new File("/sdcard/test.mp4");
-        AmazonS3 s3;
-        TransferUtility transferUtility;
-
-        // Cognito 샘플 코드. CredentialsProvider 객체 생성
-        CognitoCachingCredentialsProvider credentialsProvider = new CognitoCachingCredentialsProvider(
-                getApplicationContext(),
-                "ap-northeast-2:b0554968-0272-480a-b3ed-9e4185b58d5c", // 자격 증명 풀 ID
-                Regions.AP_NORTHEAST_2 // 리전 us-east-1
-        );
-
-        s3 = new AmazonS3Client(credentialsProvider);
-        s3.setRegion(Region.getRegion(Regions.AP_NORTHEAST_2));
-        transferUtility = new TransferUtility(s3, getApplicationContext());
-
-        // 업로드 실행. object: "SomeFile.mp4". 두 번째 파라메터는 Local경로 File 객체.
-        TransferObserver uploadObserver = transferUtility.upload("s3testsequence/test", "test.mp4", fileToUpload);
-
-        // 업로드 과정을 알 수 있도록 Listener를 추가할 수 있다.
-        uploadObserver.setTransferListener(new TransferListener() {
-            @Override
-            public void onStateChanged(int id, TransferState state) {
-                Log.d(TAG, "onStateChanged: " + id + ", " + state.toString());
-            }
-
-            @Override
-            public void onProgressChanged(int id, long bytesCurrent, long bytesTotal) {
-                float percentDonef = ((float) bytesCurrent / (float) bytesTotal) * 100;
-                int percentDone = (int) percentDonef;
-                Log.d(TAG, "ID:" + id + " bytesCurrent: " + bytesCurrent + " bytesTotal: " + bytesTotal + " " + percentDone + "%");
-            }
-
-            @Override
-            public void onError(int id, Exception ex) {
-                Log.e(TAG, ex.getMessage());
-            }
-        });
     }
 
     PermissionListener permission = new PermissionListener() {
