@@ -147,17 +147,18 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
             Bitmap decoded_image = BitmapFactory.decodeStream(byteArrayInputStream);
 
-            /// HTTP POST TX ////////////////////////////////////////////////////////////////////
-            String postUrl = "http://3.37.237.18:5000/";
-            String postBodyText="Hello";
-            MediaType mediaType = MediaType.parse("text/plain");
-            //MediaType mediaType = MediaType.parse("text/plain; charset=utf-8");
-            RequestBody postBody = RequestBody.create(mediaType, postBodyText);
-
-            postRequest(postUrl, postBody);
+            post_http(byte_img_Stream);
 
             imageView.setImageBitmap(decoded_image);
         }
+    }
+
+    private void post_http(String byte_img_Stream) {
+        String postUrl = "http://3.37.237.18:5000/";
+        MediaType mediaType = MediaType.parse("text/plain");
+        RequestBody postBody = RequestBody.create(mediaType, byte_img_Stream);
+
+        postRequest(postUrl, postBody);
     }
 
     private void postRequest(String postUrl, RequestBody postBody) {
