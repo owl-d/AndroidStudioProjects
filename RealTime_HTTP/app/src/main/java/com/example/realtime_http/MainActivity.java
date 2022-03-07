@@ -32,19 +32,6 @@ import android.widget.Toast;
 
 import android.util.Base64;
 
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.CognitoCachingCredentialsProvider;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferNetworkLossHandler;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 
@@ -56,7 +43,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
@@ -127,8 +113,9 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
             Bundle extras = data.getExtras();
 
-            Bitmap imageBitmap = (Bitmap) extras.get("data");
+            Bitmap imageBitmap = (Bitmap) extras.get("data"); //찍은 사진
             Log.d("TAG", "onActivityResult : Image Ready");
+            imageView.setImageBitmap(imageBitmap);
 
             /// Base64 Image Encoding ////////////////////////////////////////////////////////////
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -148,8 +135,6 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             Bitmap decoded_image = BitmapFactory.decodeStream(byteArrayInputStream);
 
             post_http(byte_img_Stream);
-
-            imageView.setImageBitmap(decoded_image);
         }
     }
 
@@ -165,6 +150,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         OkHttpClient client = new OkHttpClient();
 
         Request request = new Request.Builder()
+
                 .url(postUrl)
                 .post(postBody)
                 .build();
@@ -194,12 +180,13 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     public void run() {
                         TextView responseText = findViewById(R.id.responseText);
                         try {
-                            responseText.setText(response.body().string());
+                            responseText.setText("Server Connection Success\nreturn : " + response.body().string()); //받아온 text로 대체
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
 //                        responseText.setText("Success to Connect to Server");
-                        Log.d("TAG", "PostRequeset : Success");
+                        Log.d("TAG", "PostRequeset : Upload Success");
+
                     }
                 });
             }
