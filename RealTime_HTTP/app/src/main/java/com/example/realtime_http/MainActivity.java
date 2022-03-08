@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 
 import android.Manifest;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -89,11 +90,11 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     public void run() {
                         Toast.makeText(MainActivity.this, "녹화가 시작되었습니다.", Toast.LENGTH_SHORT).show();
 
-                        Log.d("TAG", "onClick -> Run");
+                        Log.d(ContentValues.TAG, "onClick -> Run");
                         try { //중요한 부분
                             Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                             startActivityForResult(i, 0);
-                            Log.d("TAG", "Intent : ACTION_IMAGE_CAPTURE");
+                            Log.d(ContentValues.TAG, "Intent : ACTION_IMAGE_CAPTURE");
                         } catch (Exception e) { //예외 발생 시 동영상 녹화 끄기
                             e.printStackTrace();
                             mediaRecorder.release();
@@ -114,7 +115,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             Bundle extras = data.getExtras();
 
             Bitmap imageBitmap = (Bitmap) extras.get("data"); //찍은 사진
-            Log.d("TAG", "onActivityResult : Image Ready");
+            Log.d(ContentValues.TAG, "onActivityResult : Image Ready");
             imageView.setImageBitmap(imageBitmap);
 
             /// Base64 Image Encoding ////////////////////////////////////////////////////////////
@@ -125,7 +126,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
             String byte_img_Stream = Base64.encodeToString(byte_image, 0);
 
-            Log.d("TAG", "Base64 Encoding : " + byte_img_Stream);
+            Log.d(ContentValues.TAG, "Base64 Encoding : " + byte_img_Stream);
 
             /// Base64 Image Decoding ///////////////////////////////////////////////////////////
             byte[] decoded_byte = Base64.decode(byte_img_Stream, 0);
@@ -167,7 +168,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     public void run() {
                         TextView responseText = findViewById(R.id.responseText);
                         responseText.setText("Failed to Connect to Server");
-                        Log.d("TAG", "PostRequeset : Failure");
+                        Log.d(ContentValues.TAG, "PostRequeset : Failure");
                     }
                 });
             }
@@ -185,7 +186,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                             e.printStackTrace();
                         }
 //                        responseText.setText("Success to Connect to Server");
-                        Log.d("TAG", "PostRequeset : Upload Success");
+                        Log.d(ContentValues.TAG, "PostRequeset : Upload Success");
 
                     }
                 });
