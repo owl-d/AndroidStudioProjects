@@ -1,6 +1,6 @@
 package com.example.realtime_sequence;
 
-import static android.content.ContentValues.TAG;
+import static com.example.realtime_sequence.CameraPreview.byte_img_Stream;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -13,16 +13,19 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.SurfaceHolder;
-import android.view.SurfaceView;
-import android.view.Window;
-import android.view.WindowManager;
+import android.view.View;
 import android.widget.Button;
-import android.widget.Toast;
+import android.widget.TextView;
 
-import com.gun0912.tedpermission.PermissionListener;
-import com.gun0912.tedpermission.TedPermission;
+import java.io.IOException;
 
-import java.util.ArrayList;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -33,29 +36,95 @@ public class MainActivity extends AppCompatActivity {
     private int RESULT_PERMISSIONS = 100;
     public static MainActivity getInstance;
 
+    private Button btn_record;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // 카메라 프리뷰를  전체화면으로 보여주기 위해 셋팅한다.
-        supportRequestWindowFeature(Window.FEATURE_NO_TITLE);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+//         //카메라 프리뷰를  전체화면으로 보여주기 위해 셋팅한다.
+//        supportRequestWindowFeature(Window.FEATURE_NO_TITLE);
+//        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+//                WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
 
-        // 안드로이드 6.0 이상 버전에서는 CAMERA 권한 허가를 요청한다.
+        //안드로이드 6.0 이상 버전에서는 CAMERA 권한 허가를 요청한다.
         //권한 설정
         requestPermissionCamera();
 
-//        TedPermission.with(this)
-//                .setPermissionListener(permission)
-//                .setRationaleMessage("녹화를 위하여 권한을 허용해주세요.")
-//                .setDeniedMessage("권한이 거부되었습니다. 설정 > 권한에서 허용해주세요.")
-//                .setPermissions(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO)
-//                .check();
+        btn_record = (Button)findViewById(R.id.btn_record); //녹화버튼 눌렀을 때 전송 시작
+        btn_record.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                TextView responseText = findViewById(R.id.responseText);
+                responseText.setText("Button Click");
+                Log.d("TAG", "Button Click");
+
+                Log.d("TAG", "Base64 Encoding : " + byte_img_Stream);
+                post_http();
+
+            }
+        });
     }
-    public static Camera getCamera(){
-        return mCamera;
+
+    public static Camera getCamera(){ return mCamera; }
+
+    private void post_http() {
+        String postUrl = "http://3.37.237.18:5000/";
+        MediaType mediaType = MediaType.parse("text/plain");
+        RequestBody postBody = RequestBody.create(mediaType, byte_img_Stream);
+
+        postRequest(postUrl, postBody);
+        Log.d("TAG", "post_http -> postRequest");
     }
+
+    private void postRequest(String postUrl, RequestBody postBody) {
+        OkHttpClient client = new OkHttpClient();
+
+        Request request = new Request.Builder()
+
+                .url(postUrl)
+                .post(postBody)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                // Cancel the post on failure.
+                call.cancel();
+
+                // In order to access the TextView inside the UI thread, the code is executed inside runOnUiThread()
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        TextView responseText = findViewById(R.id.responseText);
+                        responseText.setText("Failed to Connect to Server");
+                        Log.d("TAG", "PostRequeset : Failure");
+                    }
+                });
+            }
+
+            @Override
+            public void onResponse(Call call, final Response response) throws IOException {
+                // In order to access the TextView inside the UI thread, the code is executed inside runOnUiThread()
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        TextView responseText = findViewById(R.id.responseText);
+                        try {
+                            responseText.setText("Server Connection Success\nreturn : " + response.body().string()); //받아온 text로 대체
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+//                        responseText.setText("Success to Connect to Server");
+                        Log.d("TAG", "PostRequeset : Upload Success");
+
+                    }
+                });
+            }
+        });
+    }
+
     private void setInit(){
         getInstance = this;
 
@@ -66,7 +135,6 @@ public class MainActivity extends AppCompatActivity {
 
         // SurfaceView를 상속받은 레이아웃을 정의한다.
         surfaceView = (CameraPreview) findViewById(R.id.preview);
-
 
         // SurfaceView 정의 - holder와 Callback을 정의한다.
         holder = surfaceView.getHolder();
@@ -114,17 +182,4 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
-
-    PermissionListener permission = new PermissionListener() {
-        @Override
-        public void onPermissionGranted() { //권한 허용 되었을 때
-            Toast.makeText(MainActivity.this, "권한 허가", Toast.LENGTH_SHORT).show(); //권한 허가 되었다는 토스트 띄우기
-
-        }
-
-        @Override
-        public void onPermissionDenied(ArrayList<String> deniedPermissions) { //권한 거부 되었을 때
-            Toast.makeText(MainActivity.this, "권한 거부", Toast.LENGTH_SHORT).show();
-        }
-    };
 }

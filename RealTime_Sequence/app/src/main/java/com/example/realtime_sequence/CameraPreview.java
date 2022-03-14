@@ -1,15 +1,35 @@
 package com.example.realtime_sequence;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Rect;
+import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.util.AttributeSet;
+import android.util.Base64;
+import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback{
 
@@ -17,6 +37,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     public List<Camera.Size> listPreviewSizes;
     private Camera.Size previewSize;
     private Context context;
+    private ImageView imageView;
+
+    static String byte_img_Stream;
+
 
     // SurfaceView 생성자
     public CameraPreview(Context context, AttributeSet attrs) {
@@ -53,6 +77,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 mCamera.setDisplayOrientation(0);
                 parameters.setRotation(0);
             }
+
             mCamera.setParameters(parameters);
 
             mCamera.setPreviewDisplay(surfaceHolder);
@@ -110,6 +135,30 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             // 새로 변경된 설정으로 프리뷰를 시작한다
             mCamera .setPreviewDisplay(surfaceHolder);
             mCamera .startPreview();
+
+            mCamera.setPreviewCallback(new Camera.PreviewCallback(){
+                @Override
+                public void onPreviewFrame(byte[] data, Camera camera){
+                    //현재 SurfaceView를 JPEG Format으로 변경
+                    Camera.Parameters parameters = camera.getParameters();
+                    int w = parameters.getPreviewSize().width;
+                    int h = parameters.getPreviewSize().height;
+                    int format = parameters.getPreviewFormat();
+                    YuvImage image = new YuvImage(data, format, w, h, null);
+
+                    /// Base64 Image Encoding ////////////////////////////////////////////////////////////
+                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    Rect area = new Rect(0, 0, w, h);
+                    image.compressToJpeg(area, 100, out);
+                    Bitmap imageBitmap = BitmapFactory.decodeByteArray(out.toByteArray(), 0, out.size());
+                    imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+                    Log.d("TAG", "onActivityResult : Image Ready");
+
+                    byte[] currentData = out.toByteArray();
+                    byte_img_Stream = Base64.encodeToString(currentData, 0);
+                    //Log.d("TAG", "Base64 Encoding : " + byte_img_Stream);
+                }
+            });
 
         } catch (Exception e){
             e.printStackTrace();
