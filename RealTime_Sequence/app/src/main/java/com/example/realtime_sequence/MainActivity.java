@@ -2,10 +2,6 @@ package com.example.realtime_sequence;
 
 import static com.example.realtime_sequence.CameraPreview.byte_img_Stream;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
@@ -16,6 +12,10 @@ import android.view.SurfaceHolder;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import java.io.IOException;
 
@@ -37,6 +37,8 @@ public class MainActivity extends AppCompatActivity {
     public static MainActivity getInstance;
 
     private Button btn_record;
+    private TextView responseText;
+    private boolean record = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,16 +54,37 @@ public class MainActivity extends AppCompatActivity {
         requestPermissionCamera();
 
         btn_record = (Button)findViewById(R.id.btn_record); //녹화버튼 눌렀을 때 전송 시작
+        responseText = findViewById(R.id.responseText);
         btn_record.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                TextView responseText = findViewById(R.id.responseText);
-                responseText.setText("Button Click");
-                Log.d("TAG", "Button Click");
+                if (record) {
+                    Log.d("TAG", "Sending Stop");
+                    record = false;
+                    responseText.setText("Sending Finish");
+                }
+                else {
+                    Log.d("TAG", "Sending Start");
+                    record = true;
+                }
 
-                Log.d("TAG", "Base64 Encoding : " + byte_img_Stream);
-                post_http();
+                new Thread(new Runnable() {
+                    public void run() {
+
+                        while(record){
+                            TextView responseText = findViewById(R.id.responseText);
+                            //Log.d("TAG", "Base64 Encoding : " + byte_img_Stream);
+                            post_http();
+
+                            try {
+                                Thread.sleep(2000); //2초 대기
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }).start();
 
             }
         });
@@ -70,15 +93,16 @@ public class MainActivity extends AppCompatActivity {
     public static Camera getCamera(){ return mCamera; }
 
     private void post_http() {
+        Log.d("TAG", "Run post_http");
         String postUrl = "http://3.37.237.18:5000/";
         MediaType mediaType = MediaType.parse("text/plain");
         RequestBody postBody = RequestBody.create(mediaType, byte_img_Stream);
 
         postRequest(postUrl, postBody);
-        Log.d("TAG", "post_http -> postRequest");
     }
 
     private void postRequest(String postUrl, RequestBody postBody) {
+        Log.d("TAG", "Run postRequest");
         OkHttpClient client = new OkHttpClient();
 
         Request request = new Request.Builder()
@@ -112,7 +136,9 @@ public class MainActivity extends AppCompatActivity {
                     public void run() {
                         TextView responseText = findViewById(R.id.responseText);
                         try {
-                            responseText.setText("Server Connection Success\nreturn : " + response.body().string()); //받아온 text로 대체
+                            Log.d("TAG", "Response String : " + response.body().string());
+                            responseText.setText("Server Connect Success");
+                            //responseText.setText("Server Connection Success\nreturn : " + response.body().string()); //받아온 text로 대체
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -126,6 +152,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setInit(){
+        Log.d("TAG", "Run setInit");
         getInstance = this;
 
         // 카메라 객체를 R.layout.activity_main의 레이아웃에 선언한 SurfaceView에서 먼저 정의해야 함으로 setContentView 보다 먼저 정의한다.

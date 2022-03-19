@@ -1,6 +1,5 @@
 package com.example.realtime_sequence;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
@@ -14,22 +13,11 @@ import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback{
 
@@ -139,7 +127,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             mCamera.setPreviewCallback(new Camera.PreviewCallback(){
                 @Override
                 public void onPreviewFrame(byte[] data, Camera camera){
-                    //현재 SurfaceView를 JPEG Format으로 변경
+
+                    //현재 SurfaceView를 캡쳐
                     Camera.Parameters parameters = camera.getParameters();
                     int w = parameters.getPreviewSize().width;
                     int h = parameters.getPreviewSize().height;
@@ -156,7 +145,12 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
                     byte[] currentData = out.toByteArray();
                     byte_img_Stream = Base64.encodeToString(currentData, 0);
-                    //Log.d("TAG", "Base64 Encoding : " + byte_img_Stream);
+
+                    try {
+                        Thread.sleep(1000); //1초 대기
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
             });
 

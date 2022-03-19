@@ -20,7 +20,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#000000"
-        android:text="Texttttttttttttt"
+        android:text="Before Server Connection"
         android:textColor="#ff0000"
         android:textSize="20sp"
         android:textStyle="bold"
@@ -42,6 +42,6 @@
         android:id="@+id/preview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:visibility="visible"/>
+        android:visibility="visible" />
 
 </LinearLayout>
