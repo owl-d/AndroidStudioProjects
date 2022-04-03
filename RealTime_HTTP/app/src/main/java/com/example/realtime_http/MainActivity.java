@@ -13,6 +13,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.hardware.Camera;
 import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
@@ -66,6 +69,8 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     private boolean recording = false;
     private ImageView imageView;
 
+    public String bbox;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -80,6 +85,8 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                 .check();
 
         imageView = (ImageView) findViewById(R.id.image_view);
+
+        //DrawOn draw = new DrawOn(this);
 
         btn_record = (Button)findViewById(R.id.btn_record); //녹화버튼 눌렀을 때
         btn_record.setOnClickListener(new View.OnClickListener() {
@@ -115,7 +122,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             Bundle extras = data.getExtras();
 
             Bitmap imageBitmap = (Bitmap) extras.get("data"); //찍은 사진
-            Log.d(ContentValues.TAG, "onActivityResult : Image Ready");
+            Log.d("TAG", "onActivityResult : Image Ready");
             imageView.setImageBitmap(imageBitmap);
 
             /// Base64 Image Encoding ////////////////////////////////////////////////////////////
@@ -126,7 +133,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
             String byte_img_Stream = Base64.encodeToString(byte_image, 0);
 
-            Log.d(ContentValues.TAG, "Base64 Encoding : " + byte_img_Stream);
+            Log.d("TAG", "Base64 Encoding : " + byte_img_Stream);
 
             /// Base64 Image Decoding ///////////////////////////////////////////////////////////
             byte[] decoded_byte = Base64.decode(byte_img_Stream, 0);
@@ -168,7 +175,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     public void run() {
                         TextView responseText = findViewById(R.id.responseText);
                         responseText.setText("Failed to Connect to Server");
-                        Log.d(ContentValues.TAG, "PostRequeset : Failure");
+                        Log.d("TAG", "PostRequeset : Failure");
                     }
                 });
             }
@@ -177,16 +184,20 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             public void onResponse(Call call, final Response response) throws IOException {
                 // In order to access the TextView inside the UI thread, the code is executed inside runOnUiThread()
                 runOnUiThread(new Runnable() {
+
                     @Override
                     public void run() {
                         TextView responseText = findViewById(R.id.responseText);
                         try {
-                            responseText.setText("Server Connection Success\nreturn : " + response.body().string()); //받아온 text로 대체
+                            bbox = response.body().string();
+                            responseText.setText("Server Connection Success\nreturn : " + bbox); //받아온 text로 대체
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
 //                        responseText.setText("Success to Connect to Server");
-                        Log.d(ContentValues.TAG, "PostRequeset : Upload Success");
+                        Log.d("TAG", "PostRequeset : Upload Success");
+
+                        //setContentView(draw);
 
                     }
                 });
