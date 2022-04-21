@@ -16,6 +16,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.hardware.Camera;
 import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
@@ -25,6 +26,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.service.notification.Condition;
+import android.text.style.BackgroundColorSpan;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -70,6 +72,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     private ImageView imageView;
 
     public String bbox;
+    public Bitmap imageBitmap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,8 +88,6 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                 .check();
 
         imageView = (ImageView) findViewById(R.id.image_view);
-
-        //DrawOn draw = new DrawOn(this);
 
         btn_record = (Button)findViewById(R.id.btn_record); //녹화버튼 눌렀을 때
         btn_record.setOnClickListener(new View.OnClickListener() {
@@ -121,9 +122,11 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
             Bundle extras = data.getExtras();
 
-            Bitmap imageBitmap = (Bitmap) extras.get("data"); //찍은 사진
+            imageBitmap = (Bitmap) extras.get("data"); //찍은 사진
             Log.d("TAG", "onActivityResult : Image Ready");
-            imageView.setImageBitmap(imageBitmap);
+
+            DrawOn draw = new DrawOn(this);
+            setContentView(draw);
 
             /// Base64 Image Encoding ////////////////////////////////////////////////////////////
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -134,15 +137,45 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             String byte_img_Stream = Base64.encodeToString(byte_image, 0);
 
             Log.d("TAG", "Base64 Encoding : " + byte_img_Stream);
-
-            /// Base64 Image Decoding ///////////////////////////////////////////////////////////
-            byte[] decoded_byte = Base64.decode(byte_img_Stream, 0);
-
-            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(decoded_byte);
-
-            Bitmap decoded_image = BitmapFactory.decodeStream(byteArrayInputStream);
+            //////////////////////////////////////////////////////////////////////////////////////
 
             post_http(byte_img_Stream);
+        }
+    }
+
+    class DrawOn extends View{ // 사각형 그리기
+        public DrawOn(Context context){
+            super(context);
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            super.onDraw(canvas);
+
+            Paint pt = new Paint();
+            pt.setColor(Color.GREEN);
+            pt.setStrokeWidth(5);
+
+            int width = canvas.getWidth();
+            int height = canvas.getHeight();
+
+            Rect src = new Rect(0, 0, imageBitmap.getWidth() - 1, imageBitmap.getHeight() - 1);
+            Rect dest = new Rect(0, 0, width - 1, height - 1);
+            canvas.drawBitmap(imageBitmap, src, dest, null);
+
+            //canvas.drawBitmap(imageBitmap, 0, 0, null);
+
+            canvas.drawLine(100,350,100,400, pt);
+            canvas.drawLine(100,350,200,350, pt);
+
+            canvas.drawLine(520,350,620,350, pt);
+            canvas.drawLine(620,350,620,400, pt);
+
+            canvas.drawLine(100,600,100,650, pt);
+            canvas.drawLine(100,650,200,650, pt);
+
+            canvas.drawLine(520,650,620,650, pt);
+            canvas.drawLine(620,650,620,600, pt);
         }
     }
 

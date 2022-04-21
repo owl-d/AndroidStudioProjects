@@ -4,13 +4,15 @@ import android.Manifest;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import android.os.Bundle;
-//import android.util.Log;
+
+import android.util.Log;
 
 import android.view.inputmethod.EditorInfo;
 import android.view.KeyEvent;
@@ -63,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
     boolean isRecording = false;
     boolean forceStop = false;
 
-    private final Handler handler = new Handler() {
+    private final Handler handler = new Handler(Looper.getMainLooper()) {
         @Override
         public synchronized void handleMessage(Message msg) {
             Bundle bd = msg.getData();
@@ -163,9 +165,12 @@ public class MainActivity extends AppCompatActivity {
                         new Thread(new Runnable() {
                             public void run() {
                                 SendMessage("Recording...", 1);
+                                Log.d("TAG", "Recording");
+
                                 try {
                                     recordSpeech();
                                     SendMessage("Recognizing...", 2);
+                                    Log.d("TAG", "Recognizing");
                                 } catch (RuntimeException e) {
                                     SendMessage(e.getMessage(), 3);
                                     return;
@@ -182,16 +187,21 @@ public class MainActivity extends AppCompatActivity {
                                     if (threadRecog.isAlive()) {
                                         threadRecog.interrupt();
                                         SendMessage("No response from server for 20 secs", 4);
+                                        Log.d("TAG", "No response from server for 20 secs");
                                     } else {
                                         SendMessage("OK", 5);
+                                        Log.d("TAG", "OK");
+
                                     }
                                 } catch (InterruptedException e) {
                                     SendMessage("Interrupted", 4);
+                                    Log.d("TAG", "Interrupted");
                                 }
                             }
                         }).start();
                     } catch (Throwable t) {
                         textResult.setText("ERROR: " + t.toString());
+                        Log.d("TAG", "ERROR");
                         forceStop = false;
                         isRecording = false;
                     }
@@ -264,7 +274,7 @@ public class MainActivity extends AppCompatActivity {
 
     public String sendDataAndGetResult () {
         String openApiURL = "http://aiopen.etri.re.kr:8000/WiseASR/Recognition";
-        String accessKey = editID.getText().toString().trim();
+        String accessKey = "278d6b8b-4434-47fc-ac88-4101a2272092";
         String languageCode;
         String audioContents;
 

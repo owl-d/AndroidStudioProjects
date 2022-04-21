@@ -9,14 +9,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Hw6_Limdoyu_3">
-        <activity
-            android:name=".IntentActivity"
-            android:exported="false" />
-        <activity
-            android:name=".IntentActivity2"
-            android:exported="false" />
-        <activity
-            android:name=".MainActivity"
+        <activity android:name=".IntentActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -24,6 +17,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".IntentActivity2" />
     </application>
 
 </manifest>
