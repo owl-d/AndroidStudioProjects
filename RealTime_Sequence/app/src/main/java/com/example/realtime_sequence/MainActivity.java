@@ -24,7 +24,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.util.Map;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -51,9 +57,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
          //카메라 프리뷰를  전체화면으로 보여주기 위해 셋팅한다.
-        supportRequestWindowFeature(Window.FEATURE_NO_TITLE);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+//        supportRequestWindowFeature(Window.FEATURE_NO_TITLE);
+//        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+//                WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
 
         //안드로이드 6.0 이상 버전에서는 CAMERA 권한 허가를 요청한다.
@@ -83,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
 
                         while(record){
                             TextView responseText = findViewById(R.id.responseText);
-                            Log.d("TAG", "Base64 Encoding : " + byte_img_Stream);
+                            //Log.d("TAG", "Base64 Encoding : " + byte_img_Stream);
                             post_http();
                             //setContentView(drawon);
 
@@ -146,17 +152,28 @@ public class MainActivity extends AppCompatActivity {
                     public void run() {
                         TextView responseText = findViewById(R.id.responseText);
                         try {
-                            Log.d("TAG", "Response String : " + response.body().string());
-                            responseText.setText("Server Connect Success");
-                            //responseText.setText("Server Connection Success\nreturn : " + response.body().string()); //받아온 text로 대체
+                            String _returns = response.body().string();
+                            JSONObject Jobject = new JSONObject(_returns);
+                            JSONArray Box = Jobject.getJSONArray("box");
+                            JSONArray Max_name = Jobject.getJSONArray("max_name");
+                            JSONArray Label = Jobject.getJSONArray("labels");
 
-                            if (record == false) {
+                            //String max_name = URLEncoder.encode(String.valueOf(Max_name),"utf-8");
+
+                            Log.d("TAG", "Response Box : " + Box);
+                            Log.d("TAG", "Response Max_name : " + Max_name);
+                            Log.d("TAG", "Response Label : " + Label);
+
+                            if (record) {
+                                responseText.setText("Server Connect Success");
+                            }
+                            else {
                                 responseText.setText("Server Sending Finish");
                             }
-                        } catch (IOException e) {
+
+                        } catch (IOException | JSONException e) {
                             e.printStackTrace();
                         }
-//                        responseText.setText("Success to Connect to Server");
                         Log.d("TAG", "PostRequeset : Upload Success");
 
                     }
