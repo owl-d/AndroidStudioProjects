@@ -158,14 +158,12 @@ public class MainActivity extends AppCompatActivity {
                             JSONArray Max_name = Jobject.getJSONArray("max_name");
                             JSONArray Label = Jobject.getJSONArray("labels");
 
-                            //String max_name = URLEncoder.encode(String.valueOf(Max_name),"utf-8");
-
                             Log.d("TAG", "Response Box : " + Box);
                             Log.d("TAG", "Response Max_name : " + Max_name);
                             Log.d("TAG", "Response Label : " + Label);
 
                             if (record) {
-                                responseText.setText("Server Connect Success");
+                                responseText.setText("Server Connect Success\n"+Max_name+"\n"+Label);
                             }
                             else {
                                 responseText.setText("Server Sending Finish");
