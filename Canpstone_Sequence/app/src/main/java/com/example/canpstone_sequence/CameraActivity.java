@@ -81,6 +81,7 @@ import java.io.IOException;
 public class CameraActivity extends Activity implements SurfaceHolder.Callback {
 
     private boolean record = false;
+    private boolean record_end = false;
     private String byte_img_Stream;
     private long prev_millis_capture = 0;
     private long prev_millis_post = 0;
@@ -119,10 +120,12 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
                 if (record) {
                     Log.d("TAG", "Sending Stop");
                     record = false;
+                    record_end = true;
                     btn_record.setText("PUSH TO START");
                     tx_response.setText("Sending Finish");
                 }
                 else {
+                    refreshCamera();
                     Log.d("TAG", "Sending Start");
                     btn_record.setText("PUSH TO STOP");
                     record = true;
@@ -374,6 +377,11 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
                     byte[] currentData = out.toByteArray();
                     byte_img_Stream = Base64.encodeToString(currentData, 0);
                 }
+                else if(record_end){
+                    record_end = false;
+                    Log.d("TAG", "ReleaseCamera");
+                    releaseCamera();
+                }
             }
         });
     }
@@ -384,6 +392,17 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
         camera.stopPreview();
         camera.release();
         camera = null;
+    }
+
+    // release Camera for other applications
+    private void releaseCamera() {
+        // check if Camera instance exists
+        if (camera != null) {
+            // first stop preview
+            camera.stopPreview();
+            // then cancel its preview callback
+            camera.setPreviewCallback(null);
+        }
     }
 
 }
