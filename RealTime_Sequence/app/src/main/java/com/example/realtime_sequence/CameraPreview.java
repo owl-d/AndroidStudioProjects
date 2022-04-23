@@ -21,13 +21,14 @@ import java.util.List;
 
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback{
 
+    static String byte_img_Stream;
+    static long prev_millis = 0;
+    static boolean first = true;
+
     private Camera mCamera;
     public List<Camera.Size> listPreviewSizes;
     private Camera.Size previewSize;
     private Context context;
-    private ImageView imageView;
-
-    static String byte_img_Stream;
 
 
     // SurfaceView 생성자
@@ -96,61 +97,84 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         }
         // 프리뷰를 다시 설정한다.
         try {
-            mCamera .stopPreview();
+            mCamera.stopPreview();
 
-            Camera.Parameters parameters = mCamera .getParameters();
+            Camera.Parameters parameters = mCamera.getParameters();
 
             // 화면 회전시 사진 회전 속성을 맞추기 위해 설정한다.
             int rotation = MainActivity.getInstance.getWindowManager().getDefaultDisplay().getRotation();
             if (rotation == Surface.ROTATION_0) {
-                mCamera .setDisplayOrientation(90);
+                mCamera.setDisplayOrientation(90);
                 parameters.setRotation(90);
             }else if(rotation == Surface.ROTATION_90){
-                mCamera .setDisplayOrientation(0);
+                mCamera.setDisplayOrientation(0);
                 parameters.setRotation(0);
             }else if(rotation == Surface.ROTATION_180){
-                mCamera .setDisplayOrientation(270);
+                mCamera.setDisplayOrientation(270);
                 parameters.setRotation(270);
             }else{
-                mCamera .setDisplayOrientation(180);
+                mCamera.setDisplayOrientation(180);
                 parameters.setRotation(180);
             }
 
             // 변경된 화면 넓이를 설정한다.
             parameters.setPreviewSize(previewSize.width, previewSize.height);
-            mCamera .setParameters(parameters);
+            mCamera.setParameters(parameters);
 
             // 새로 변경된 설정으로 프리뷰를 시작한다
-            mCamera .setPreviewDisplay(surfaceHolder);
-            mCamera .startPreview();
+            mCamera.setPreviewDisplay(surfaceHolder);
+            mCamera.startPreview();
 
             mCamera.setPreviewCallback(new Camera.PreviewCallback(){
                 @Override
                 public void onPreviewFrame(byte[] data, Camera camera){
 
-                    //현재 SurfaceView를 캡쳐
-                    Camera.Parameters parameters = camera.getParameters();
-                    int w = parameters.getPreviewSize().width;
-                    int h = parameters.getPreviewSize().height;
-                    int format = parameters.getPreviewFormat();
-                    YuvImage image = new YuvImage(data, format, w, h, null);
+                    if(first){ //처음 한 번만 실행
+                        first=false;
 
-                    /// Base64 Image Encoding ////////////////////////////////////////////////////////////
-                    ByteArrayOutputStream out = new ByteArrayOutputStream();
-                    Rect area = new Rect(0, 0, w, h);
-                    image.compressToJpeg(area, 100, out);
-                    Bitmap imageBitmap = BitmapFactory.decodeByteArray(out.toByteArray(), 0, out.size());
-                    imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
-                    Log.d("TAG", "onActivityResult : Image Ready");
+                        //현재 SurfaceView를 캡쳐
+                        Camera.Parameters parameters = camera.getParameters();
+                        int w = parameters.getPreviewSize().width;
+                        int h = parameters.getPreviewSize().height;
+                        int format = parameters.getPreviewFormat();
+                        YuvImage image = new YuvImage(data, format, w, h, null);
 
-                    byte[] currentData = out.toByteArray();
-                    byte_img_Stream = Base64.encodeToString(currentData, 0);
+                        /// Base64 Image Encoding ////////////////////////////////////////////////////////////
+                        ByteArrayOutputStream out = new ByteArrayOutputStream();
+                        Rect area = new Rect(0, 0, w, h);
+                        image.compressToJpeg(area, 100, out);
+                        Bitmap imageBitmap = BitmapFactory.decodeByteArray(out.toByteArray(), 0, out.size());
+                        imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+                        Log.d("TAG", "onActivityResult : Image Ready");
 
-                    try {
-                        Thread.sleep(1000); //1초 대기
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        byte[] currentData = out.toByteArray();
+                        byte_img_Stream = Base64.encodeToString(currentData, 0);
                     }
+
+                    long now_millis = System.currentTimeMillis();
+                    if(MainActivity.record && (now_millis - prev_millis > 2000)){
+
+                        prev_millis = now_millis;
+
+                        //현재 SurfaceView를 캡쳐
+                        Camera.Parameters parameters = camera.getParameters();
+                        int w = parameters.getPreviewSize().width;
+                        int h = parameters.getPreviewSize().height;
+                        int format = parameters.getPreviewFormat();
+                        YuvImage image = new YuvImage(data, format, w, h, null);
+
+                        /// Base64 Image Encoding ////////////////////////////////////////////////////////////
+                        ByteArrayOutputStream out = new ByteArrayOutputStream();
+                        Rect area = new Rect(0, 0, w, h);
+                        image.compressToJpeg(area, 100, out);
+                        Bitmap imageBitmap = BitmapFactory.decodeByteArray(out.toByteArray(), 0, out.size());
+                        imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+                        Log.d("TAG", "onActivityResult : Image Ready");
+
+                        byte[] currentData = out.toByteArray();
+                        byte_img_Stream = Base64.encodeToString(currentData, 0);
+                    }
+
                 }
             });
 

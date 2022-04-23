@@ -4,6 +4,7 @@ import static com.example.realtime_sequence.CameraPreview.byte_img_Stream;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -14,15 +15,20 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+
+import com.gun0912.tedpermission.PermissionListener;
+import com.gun0912.tedpermission.TedPermission;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -30,6 +36,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.Map;
 
 import okhttp3.Call;
@@ -42,6 +49,7 @@ import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
 
+    static boolean record = false;
     private static CameraPreview surfaceView;
     private SurfaceHolder holder;
     private static Button camera_preview_button;
@@ -51,7 +59,6 @@ public class MainActivity extends AppCompatActivity {
 
     private Button btn_record;
     private TextView responseText;
-    private boolean record = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
 //                WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
 
-        //안드로이드 6.0 이상 버전에서는 CAMERA 권한 허가를 요청한다.
+        //권한 설정 : 안드로이드 6.0 이상 버전에서는 CAMERA 권한 허가를 요청한다.
         //권한 설정
         requestPermissionCamera();
 
@@ -77,10 +84,12 @@ public class MainActivity extends AppCompatActivity {
                 if (record) {
                     Log.d("TAG", "Sending Stop");
                     record = false;
+                    btn_record.setText("PUSH TO START");
                     responseText.setText("Sending Finish");
                 }
                 else {
                     Log.d("TAG", "Sending Start");
+                    btn_record.setText("PUSH TO STOP");
                     record = true;
                 }
 
