@@ -90,6 +90,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     @Override
     public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int w, int h) {
 
+        Log.d("TAG", "SurfaceChanged");
+
         // 카메라 화면을 회전 할 때의 처리
         if (surfaceHolder.getSurface() == null){
             // 프리뷰가 존재하지 않을때

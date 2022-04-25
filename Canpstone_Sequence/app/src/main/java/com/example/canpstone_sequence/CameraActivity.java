@@ -80,12 +80,12 @@ import java.io.IOException;
 
 public class CameraActivity extends Activity implements SurfaceHolder.Callback {
 
-    private boolean record = false;
-    private boolean record_end = false;
-    private String byte_img_Stream;
-    private long prev_millis_capture = 0;
-    private long prev_millis_post = 0;
-    private boolean first = true;
+    static boolean record = false;
+    static boolean record_end = false;
+    static String byte_img_Stream;
+    static long prev_millis_capture = 0;
+    static long prev_millis_post = 0;
+    static boolean first = true;
     private Camera.Size previewSize;
 
     private Camera camera;
@@ -107,6 +107,14 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
 
         requestPermissionCamera();
 
+        getWindow().setFormat(PixelFormat.UNKNOWN);
+
+        surfaceView = (SurfaceView) findViewById(R.id.surfaceView);
+        surfaceHolder = surfaceView.getHolder();
+        surfaceHolder.addCallback(this);
+        surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+
+
         tx_target = (TextView) findViewById(R.id.tx_target);
         tx_target.setText("TARGET : "+result);
         tx_response = findViewById(R.id.tx_response);
@@ -118,6 +126,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
                 Log.d("TAG", "btn_record CLICK");
 
                 if (record) {
+                    prev_millis_capture = System.currentTimeMillis();
                     Log.d("TAG", "Sending Stop");
                     record = false;
                     record_end = true;
@@ -125,17 +134,17 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
                     tx_response.setText("Sending Finish");
                 }
                 else {
-                    refreshCamera();
                     Log.d("TAG", "Sending Start");
                     btn_record.setText("PUSH TO STOP");
                     record = true;
+                    record_end = false;
                 }
 
                 new Thread(new Runnable() {
                     public void run() {
 
                         while(record){
-                            //Log.d("TAG", "Base64 Encoding : " + byte_img_Stream);
+                            //Log.d("TAG", "Base64 Encoding : " + byte_img_Stream.substring(1000, 1005));
 
                             long now_millis_post = System.currentTimeMillis();
                             if(record && (now_millis_post - prev_millis_post > 2000)){
@@ -149,14 +158,6 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
                 }).start();
             }
         });
-
-        getWindow().setFormat(PixelFormat.UNKNOWN);
-
-
-        surfaceView = (SurfaceView) findViewById(R.id.surfaceView);
-        surfaceHolder = surfaceView.getHolder();
-        surfaceHolder.addCallback(this);
-        surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
     }
 
     private void post_http() {
@@ -269,6 +270,8 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
         try {
             camera.setPreviewDisplay(surfaceHolder);
             camera.startPreview();
+            camera.setPreviewCallback((Camera.PreviewCallback) this);
+
         }
         catch (Exception e) {
         }
@@ -324,7 +327,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
     }
 
     @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+    public void surfaceChanged(SurfaceHolder holder, int i, int w, int h) {
         //refreshCamera();
         Log.d("TAG", "SurfaceChanged");
 
@@ -332,55 +335,36 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
             @Override
             public void onPreviewFrame(byte[] data, Camera camera){
 
-                if(first){ //처음 한 번만 실행
-                    first=false;
-
-                    //현재 SurfaceView를 캡쳐
-                    Camera.Parameters parameters = camera.getParameters();
-                    int w = parameters.getPreviewSize().width;
-                    int h = parameters.getPreviewSize().height;
-                    int format = parameters.getPreviewFormat();
-                    YuvImage image = new YuvImage(data, format, w, h, null);
-
-                    /// Base64 Image Encoding ////////////////////////////////////////////////////////////
-                    ByteArrayOutputStream out = new ByteArrayOutputStream();
-                    Rect area = new Rect(0, 0, w, h);
-                    image.compressToJpeg(area, 100, out);
-                    Bitmap imageBitmap = BitmapFactory.decodeByteArray(out.toByteArray(), 0, out.size());
-                    imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
-                    Log.d("TAG", "onActivityResult : Image Ready");
-
-                    byte[] currentData = out.toByteArray();
-                    byte_img_Stream = Base64.encodeToString(currentData, 0);
-                }
-
                 long now_millis_capture = System.currentTimeMillis();
-                if(record && (now_millis_capture - prev_millis_capture > 2000)){
+                if(first || record){
+                    if (first || (now_millis_capture - prev_millis_capture > 2000)){
+                        Log.d("TAG", "Image Capture Mode");
 
-                    prev_millis_capture = now_millis_capture;
+                        first = false;
+                        prev_millis_capture = now_millis_capture;
 
-                    //현재 SurfaceView를 캡쳐
-                    Camera.Parameters parameters = camera.getParameters();
-                    int w = parameters.getPreviewSize().width;
-                    int h = parameters.getPreviewSize().height;
-                    int format = parameters.getPreviewFormat();
-                    YuvImage image = new YuvImage(data, format, w, h, null);
+                        //현재 SurfaceView를 캡쳐
+                        Camera.Parameters param = camera.getParameters();
+                        int w = param.getPreviewSize().width;
+                        int h = param.getPreviewSize().height;
+                        int format = param.getPreviewFormat();
+                        YuvImage image = new YuvImage(data, format, w, h, null);
 
-                    /// Base64 Image Encoding ////////////////////////////////////////////////////////////
-                    ByteArrayOutputStream out = new ByteArrayOutputStream();
-                    Rect area = new Rect(0, 0, w, h);
-                    image.compressToJpeg(area, 100, out);
-                    Bitmap imageBitmap = BitmapFactory.decodeByteArray(out.toByteArray(), 0, out.size());
-                    imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
-                    Log.d("TAG", "surfaceChanged : Image Ready");
+                        /// Base64 Image Encoding ////////////////////////////////////////////////////////////
+                        ByteArrayOutputStream out = new ByteArrayOutputStream();
+                        Rect area = new Rect(0, 0, w, h);
+                        image.compressToJpeg(area, 100, out);
+                        Bitmap imageBitmap = BitmapFactory.decodeByteArray(out.toByteArray(), 0, out.size());
+                        imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+                        Log.d("TAG", "onActivityResult : Image Ready");
 
-                    byte[] currentData = out.toByteArray();
-                    byte_img_Stream = Base64.encodeToString(currentData, 0);
+                        byte[] currentData = out.toByteArray();
+                        byte_img_Stream = Base64.encodeToString(currentData, 0);
+                    }
                 }
                 else if(record_end){
-                    record_end = false;
-                    Log.d("TAG", "ReleaseCamera");
-                    releaseCamera();
+                    Log.d("TAG", "Record End");
+                    //releaseCamera();
                 }
             }
         });
