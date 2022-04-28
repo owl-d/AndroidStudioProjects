@@ -2,6 +2,7 @@ package com.example.canpstone_sequence;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.content.Intent;
@@ -23,6 +24,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 
@@ -108,6 +110,21 @@ public class ETRIActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_etri);
 
+        //권한 설정
+        String[] permissions = {Manifest.permission.RECORD_AUDIO};
+
+        int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO);
+        if(permissionCheck == PackageManager.PERMISSION_GRANTED){
+            Toast.makeText(this, "오디오 녹화 권한 주어져 있음", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "오디오 녹화 권한 없음", Toast.LENGTH_SHORT).show();
+            if(ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.RECORD_AUDIO)){
+                Toast.makeText(this, "오디오 녹화 설명 필요함", Toast.LENGTH_SHORT).show();
+            } else {
+                ActivityCompat.requestPermissions(this, permissions, 1);
+            }
+        }
+
         buttonStart = (Button) findViewById(R.id.buttonStart);
         buttonNext = (Button) findViewById(R.id.buttonNext);
         textResult = (TextView) findViewById(R.id.textResult);
@@ -172,6 +189,23 @@ public class ETRIActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case 1:
+                if (grantResults.length > 0) {
+                    if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                        Toast.makeText(this, "오디오 녹화 권한 동의함", Toast.LENGTH_SHORT).show();
+                    } else if (grantResults[0] == PackageManager.PERMISSION_DENIED) {
+                        Toast.makeText(this, "오디오 녹화 권한 거부함", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(this, "오디오 녹화 권한 획득 실패", Toast.LENGTH_SHORT).show();
+                }
+        }
     }
 
     public static String readStream(InputStream in) throws IOException {

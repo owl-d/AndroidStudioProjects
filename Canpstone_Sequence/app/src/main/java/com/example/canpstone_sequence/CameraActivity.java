@@ -147,7 +147,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
                             //Log.d("TAG", "Base64 Encoding : " + byte_img_Stream.substring(1000, 1005));
 
                             long now_millis_post = System.currentTimeMillis();
-                            if(record && (now_millis_post - prev_millis_post > 2000)){
+                            if(record && (now_millis_post - prev_millis_post > 4000)){
                                 prev_millis_post = now_millis_post;
                                 post_http();
                                 Log.d("TAG", "post_http");
@@ -337,7 +337,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
 
                 long now_millis_capture = System.currentTimeMillis();
                 if(first || record){
-                    if (first || (now_millis_capture - prev_millis_capture > 2000)){
+                    if (first || (now_millis_capture - prev_millis_capture > 4000)){
                         Log.d("TAG", "Image Capture Mode");
 
                         first = false;

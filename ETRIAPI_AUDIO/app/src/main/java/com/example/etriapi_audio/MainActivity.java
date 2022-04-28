@@ -9,6 +9,7 @@ import android.os.Message;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import android.os.Bundle;
 
@@ -31,6 +32,7 @@ import android.media.MediaRecorder;
 import com.google.gson.Gson;
 
 import android.util.Base64;
+import android.widget.Toast;
 
 import org.apache.commons.lang.StringEscapeUtils;
 
@@ -75,28 +77,33 @@ public class MainActivity extends AppCompatActivity {
                 case 1:
                     textResult.setText(v);
                     buttonStart.setText("PUSH TO STOP");
+                    Log.d("TAG", "Recording Start");
                     break;
                 // 녹음이 정상적으로 종료되었음(버튼 또는 max time)
                 case 2:
                     textResult.setText(v);
                     buttonStart.setEnabled(false);
+                    Log.d("TAG", "Recording End (Button or Max Time)");
                     break;
                 // 녹음이 비정상적으로 종료되었음(마이크 권한 등)
                 case 3:
                     textResult.setText(v);
                     buttonStart.setText("PUSH TO START");
+                    Log.d("TAG", "Recording End (MIC Permission)");
                     break;
                 // 인식이 비정상적으로 종료되었음(timeout 등)
                 case 4:
                     textResult.setText(v);
                     buttonStart.setEnabled(true);
                     buttonStart.setText("PUSH TO START");
+                    Log.d("TAG", "Recognizing End (TIME OUT)");
                     break;
                 // 인식이 정상적으로 종료되었음 (thread내에서 exception포함)
                 case 5:
                     textResult.setText(StringEscapeUtils.unescapeJava(result));
                     buttonStart.setEnabled(true);
                     buttonStart.setText("PUSH TO START");
+                    Log.d("TAG", "Recognizing End (Exception in Thread)");
                     break;
             }
             super.handleMessage(msg);
@@ -104,6 +111,7 @@ public class MainActivity extends AppCompatActivity {
     };
 
     public void SendMessage(String str, int id) {
+        Log.d("TAG", "SendMessage");
         Message msg = handler.obtainMessage();
         Bundle bd = new Bundle();
         bd.putString(MSG_KEY, str);
@@ -116,6 +124,20 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        String[] permissions = {Manifest.permission.RECORD_AUDIO};
+
+        int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO);
+        if(permissionCheck == PackageManager.PERMISSION_GRANTED){
+            Toast.makeText(this, "오디오 녹화 권한 주어져 있음", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "오디오 녹화 권한 없음", Toast.LENGTH_SHORT).show();
+            if(ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.RECORD_AUDIO)){
+                Toast.makeText(this, "오디오 녹화 설명 필요함", Toast.LENGTH_SHORT).show();
+            } else {
+                ActivityCompat.requestPermissions(this, permissions, 1);
+            }
+        }
 
         buttonStart = (Button) findViewById(R.id.buttonStart);
         textResult = (TextView) findViewById(R.id.textResult);
@@ -158,6 +180,7 @@ public class MainActivity extends AppCompatActivity {
 
         buttonStart.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                Log.d("TAG", "btn_Start_Click!");
                 if (isRecording) {
                     forceStop = true;
                 } else {
@@ -168,7 +191,9 @@ public class MainActivity extends AppCompatActivity {
                                 Log.d("TAG", "Recording");
 
                                 try {
+                                    Log.d("TAG", "try - before recordSpeech");
                                     recordSpeech();
+                                    Log.d("TAG", "try - after recordSpeech");
                                     SendMessage("Recognizing...", 2);
                                     Log.d("TAG", "Recognizing");
                                 } catch (RuntimeException e) {
@@ -178,6 +203,7 @@ public class MainActivity extends AppCompatActivity {
 
                                 Thread threadRecog = new Thread(new Runnable() {
                                     public void run() {
+                                        Log.d("TAG", "ThreadRecog Start");
                                         result = sendDataAndGetResult();
                                     }
                                 });
@@ -210,6 +236,24 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case 1:
+                if (grantResults.length > 0) {
+                    if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                        Toast.makeText(this, "오디오 녹화 권한 동의함", Toast.LENGTH_SHORT).show();
+                    } else if (grantResults[0] == PackageManager.PERMISSION_DENIED) {
+                        Toast.makeText(this, "오디오 녹화 권한 거부함", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(this, "오디오 녹화 권한 획득 실패", Toast.LENGTH_SHORT).show();
+                }
+
+        }
+    }
+
     public static String readStream(InputStream in) throws IOException {
         StringBuilder sb = new StringBuilder();
         BufferedReader r = new BufferedReader(new InputStreamReader(in), 1000);
@@ -222,11 +266,13 @@ public class MainActivity extends AppCompatActivity {
 
     public void recordSpeech() throws RuntimeException {
         try {
+            Log.d("TAG", "recordSpeech");
             int bufferSize = AudioRecord.getMinBufferSize(
                     16000, // sampling frequency
                     AudioFormat.CHANNEL_IN_MONO,
                     AudioFormat.ENCODING_PCM_16BIT);
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                Log.d("TAG", "recordSpeech - if - return : A3 is in here");
                 // TODO: Consider calling
                 //    ActivityCompat#requestPermissions
                 // here to request the missing permissions, and then overriding
@@ -244,9 +290,11 @@ public class MainActivity extends AppCompatActivity {
                     bufferSize);
             lenSpeech = 0;
             if (audio.getState() != AudioRecord.STATE_INITIALIZED) {
+                Log.d("TAG", "recordSpeech - 2nd if - throw");
                 throw new RuntimeException("ERROR: Failed to initialize audio device. Allow app to access microphone");
             }
             else {
+                Log.d("TAG", "recordSpeech - else - main : J7 is in here");
                 short [] inBuffer = new short [bufferSize];
                 forceStop = false;
                 isRecording = true;
