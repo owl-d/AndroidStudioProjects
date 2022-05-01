@@ -1,19 +1,16 @@
 package com.example.canpstone_sequence;
 
-import static android.view.View.resolveSize;
 import static com.example.canpstone_sequence.ETRIActivity.result;
+import static com.example.canpstone_sequence.ETRIActivity.record_end;
+import static com.example.canpstone_sequence.ETRIActivity.bills_mode;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
@@ -25,13 +22,9 @@ import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
@@ -40,12 +33,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.util.List;
-import java.util.Map;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -55,39 +44,15 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-import android.Manifest;
-import android.app.Activity;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.graphics.PixelFormat;
-import android.hardware.Camera;
-import android.os.Build;
-import android.os.Bundle;
-import android.view.Surface;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
-import android.view.View;
-import android.widget.Button;
-import android.widget.Toast;
-
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-
 
 public class CameraActivity extends Activity implements SurfaceHolder.Callback {
 
     static boolean record = false;
-    static boolean record_end = false;
     static String Post_String;
     static String byte_image_Stream;
     static long prev_millis_capture = 0;
     static long prev_millis_post = 0;
     static boolean first = true;
-    private Camera.Size previewSize;
 
     private Camera camera;
     public List<Camera.Size> listPreviewSizes;
@@ -96,7 +61,6 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
     Button btn_record;
     TextView tx_target;
     TextView tx_response;
-    String str;
 
     private int RESULT_PERMISSIONS = 100;
 
@@ -121,8 +85,10 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
         tx_response = findViewById(R.id.tx_response);
 
         //Send ETRI Target to Server
-        Post_String = "etri"+result;
-        post_http();
+        if(first) {
+            Post_String = "etri"+result;
+            post_http();
+        }
 
         btn_record = (Button) findViewById(R.id.btn_record);
         btn_record.setOnClickListener(new View.OnClickListener() {
@@ -130,12 +96,17 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
             public void onClick(View v) {
                 Log.d("TAG", "btn_record CLICK");
 
-                if (record) {
+                if(record_end) {
+                    Log.d("TAG", "YOLO END -> BILLS");
+                    Intent intent = new Intent(getApplicationContext(), TermActivity.class);
+                    startActivity(intent);
+                }
+                else if (record) {
                     prev_millis_capture = System.currentTimeMillis();
                     Log.d("TAG", "Sending Stop");
                     record = false;
                     record_end = true;
-                    btn_record.setText("PUSH TO START");
+                    btn_record.setText("PUSH TO END");
                     tx_response.setText("Sending Finish");
                 }
                 else {
@@ -154,7 +125,13 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
                             long now_millis_post = System.currentTimeMillis();
                             if(record && (now_millis_post - prev_millis_post > 4000)){
                                 prev_millis_post = now_millis_post;
-                                Post_String = byte_image_Stream;
+                                if(bills_mode == 0) {
+                                    Post_String = byte_image_Stream;
+                                }
+                                else {
+                                    Post_String = "bill" + byte_image_Stream;
+                                    bills_mode = 2;
+                                }
                                 post_http();
                                 Log.d("TAG", "post_http");
 
@@ -221,7 +198,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
                             Log.d("TAG", "Response Label : " + Label);
 
                             if (record) {
-                                responseText.setText("Server Connect Success\n"+Max_name+"\n"+Label);
+                                responseText.setText("Server Connect Success");
                             }
                             else {
                                 responseText.setText("Server Sending Finish");
@@ -342,35 +319,33 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
             public void onPreviewFrame(byte[] data, Camera camera){
 
                 long now_millis_capture = System.currentTimeMillis();
-                if(first || record){
-                    if (first || (now_millis_capture - prev_millis_capture > 4000)){
-                        Log.d("TAG", "Image Capture Mode");
+                if(first || (record && (now_millis_capture - prev_millis_capture > 4000))){
+                    Log.d("TAG", "Image Capture Mode");
 
-                        first = false;
-                        prev_millis_capture = now_millis_capture;
+                    first = false;
+                    prev_millis_capture = now_millis_capture;
 
-                        //현재 SurfaceView를 캡쳐
-                        Camera.Parameters param = camera.getParameters();
-                        int w = param.getPreviewSize().width;
-                        int h = param.getPreviewSize().height;
-                        int format = param.getPreviewFormat();
-                        YuvImage image = new YuvImage(data, format, w, h, null);
+                    //현재 SurfaceView를 캡쳐
+                    Camera.Parameters param = camera.getParameters();
+                    int w = param.getPreviewSize().width;
+                    int h = param.getPreviewSize().height;
+                    int format = param.getPreviewFormat();
+                    YuvImage image = new YuvImage(data, format, w, h, null);
 
-                        /// Base64 Image Encoding ////////////////////////////////////////////////////////////
-                        ByteArrayOutputStream out = new ByteArrayOutputStream();
-                        Rect area = new Rect(0, 0, w, h);
-                        image.compressToJpeg(area, 100, out);
-                        Bitmap imageBitmap = BitmapFactory.decodeByteArray(out.toByteArray(), 0, out.size());
-                        imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
-                        Log.d("TAG", "onActivityResult : Image Ready");
+                    /// Base64 Image Encoding ////////////////////////////////////////////////////////////
+                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    Rect area = new Rect(0, 0, w, h);
+                    image.compressToJpeg(area, 100, out);
+                    Bitmap imageBitmap = BitmapFactory.decodeByteArray(out.toByteArray(), 0, out.size());
+                    imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+                    Log.d("TAG", "onActivityResult : Image Ready");
 
-                        byte[] currentData = out.toByteArray();
-                        byte_image_Stream = Base64.encodeToString(currentData, 0);
-                    }
+                    byte[] currentData = out.toByteArray();
+                    byte_image_Stream = Base64.encodeToString(currentData, 0);
                 }
                 else if(record_end){
                     Log.d("TAG", "Record End");
-                    //releaseCamera();
+                    releaseCamera();
                 }
             }
         });
