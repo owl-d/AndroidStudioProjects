@@ -82,7 +82,8 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
 
     static boolean record = false;
     static boolean record_end = false;
-    static String byte_img_Stream;
+    static String Post_String;
+    static String byte_image_Stream;
     static long prev_millis_capture = 0;
     static long prev_millis_post = 0;
     static boolean first = true;
@@ -119,6 +120,10 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
         tx_target.setText("TARGET : "+result);
         tx_response = findViewById(R.id.tx_response);
 
+        //Send ETRI Target to Server
+        Post_String = "etri"+result;
+        post_http();
+
         btn_record = (Button) findViewById(R.id.btn_record);
         btn_record.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -144,11 +149,12 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
                     public void run() {
 
                         while(record){
-                            //Log.d("TAG", "Base64 Encoding : " + byte_img_Stream.substring(1000, 1005));
+                            //Log.d("TAG", "Base64 Encoding : " + byte_image_Stream.substring(1000, 1005));
 
                             long now_millis_post = System.currentTimeMillis();
                             if(record && (now_millis_post - prev_millis_post > 4000)){
                                 prev_millis_post = now_millis_post;
+                                Post_String = byte_image_Stream;
                                 post_http();
                                 Log.d("TAG", "post_http");
 
@@ -164,7 +170,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
         Log.d("TAG", "Run post_http");
         String postUrl = "http://3.37.237.18:5000/";
         MediaType mediaType = MediaType.parse("text/plain");
-        RequestBody postBody = RequestBody.create(mediaType, byte_img_Stream);
+        RequestBody postBody = RequestBody.create(mediaType, Post_String);
 
         postRequest(postUrl, postBody);
     }
@@ -359,7 +365,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
                         Log.d("TAG", "onActivityResult : Image Ready");
 
                         byte[] currentData = out.toByteArray();
-                        byte_img_Stream = Base64.encodeToString(currentData, 0);
+                        byte_image_Stream = Base64.encodeToString(currentData, 0);
                     }
                 }
                 else if(record_end){
