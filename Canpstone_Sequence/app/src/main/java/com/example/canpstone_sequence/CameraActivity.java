@@ -1,8 +1,8 @@
 package com.example.canpstone_sequence;
 
-import static com.example.canpstone_sequence.ETRIActivity.result;
-import static com.example.canpstone_sequence.ETRIActivity.record_end;
 import static com.example.canpstone_sequence.ETRIActivity.bills_mode;
+import static com.example.canpstone_sequence.ETRIActivity.record_end;
+import static com.example.canpstone_sequence.ETRIActivity.result;
 
 import android.Manifest;
 import android.app.Activity;
@@ -27,10 +27,6 @@ import android.widget.TextView;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -187,15 +183,15 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
                     public void run() {
                         TextView responseText = findViewById(R.id.tx_response);
                         try {
-                            String _returns = response.body().string();
-                            JSONObject Jobject = new JSONObject(_returns);
-                            JSONArray Box = Jobject.getJSONArray("box");
-                            JSONArray Max_name = Jobject.getJSONArray("max_name");
-                            JSONArray Label = Jobject.getJSONArray("labels");
+                            String _return = response.body().string();
 
-                            Log.d("TAG", "Response Box : " + Box);
-                            Log.d("TAG", "Response Max_name : " + Max_name);
-                            Log.d("TAG", "Response Label : " + Label);
+                            Log.d("TAG", "AWS Response : " + _return);
+                            if (_return == "Find Target Category") {
+                                Log.d("TAG", "There is Target Category!");
+                            }
+                            if (_return == "Find Target Object") {
+                                Log.d("TAG", "There is Target Object!");
+                            }
 
                             if (record) {
                                 responseText.setText("Server Connect Success");
@@ -204,7 +200,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
                                 responseText.setText("Server Sending Finish");
                             }
 
-                        } catch (IOException | JSONException e) {
+                        } catch (IOException e) {
                             e.printStackTrace();
                         }
                         Log.d("TAG", "PostRequeset : Upload Success");
